@@ -13,7 +13,7 @@ mod models;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load environment variables
     dotenv().ok();
-    tracing::info!(env::var("DATABASE_URL"));
+    tracing::info!("{}",env::var("DATABASE_URL"));
     // Initialize logging
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::try_from_default_env()
