@@ -14,5 +14,5 @@ pub struct Project {
     pub github_url: Option<String>,
     pub job_id: Option<i32>,
     /// List of technologies used in the project
-    pub tech_stack: Vec<Skill>,
+    pub skills: Vec<Skill>,
 }

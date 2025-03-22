@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::db::proficiency_enum::Proficency;
+use crate::db::proficiency_enum::Proficiency;
 
 /// Represents a technology/tool used in projects
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -10,5 +10,5 @@ pub struct Skill {
     pub name: String,
     pub description: String,
     pub official_site_url: String,
-    pub proficiency: Proficency,
+    pub proficiency: Proficiency,
 }

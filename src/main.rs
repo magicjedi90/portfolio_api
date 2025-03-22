@@ -13,7 +13,7 @@ mod models;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load environment variables
     dotenv().ok();
-    tracing::info!("{}",env::var("DATABASE_URL"));
+    tracing::info!("{}", env::var("DATABASE_URL").unwrap_or_else(|err| format!("Error: {}", err)));
     // Initialize logging
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::try_from_default_env()
@@ -22,12 +22,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     // Initialize database connection
-    let pool = db::connection::connect().await;
+    let pool = db::connection::connect().await?;
 
     // Build application with routes
-    let app = Router::new()
+    let app = Router::<_, axum::body::Body>::new()
         .route("/projects", get(handlers::projects::get_projects))
-        .layer(Extension(pool));
+        .layer(Extension(pool.clone()));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::info!("🚀 Server running on {}", addr);
