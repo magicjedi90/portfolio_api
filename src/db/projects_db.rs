@@ -1,6 +1,8 @@
 use crate::models::project::Project;
 use sqlx::PgPool;
 use crate::models::skill::Skill;
+use sqlx::postgres::PgRow;
+use sqlx::Row;
 use serde_json::Value;
 
 /// Fetches all projects from the database, ordered by id.
@@ -13,25 +15,15 @@ use serde_json::Value;
 ///
 /// * `Result<Vec<Project>, sqlx::Error>` - A vector of projects if successful, or a database error
 pub async fn fetch_projects(pool: &PgPool) -> Result<Vec<Project>, sqlx::Error> {
-    #[derive(sqlx::FromRow)]
-    struct ProjectRow {
-        id: i32,
-        name: String,
-        description: String,
-        github_url: Option<String>,
-        job_id: Option<i32>,
-        skills: Value,
-    }
-
-    let rows = sqlx::query_as!(
-        ProjectRow,
+    // Query to fetch projects with their associated skills
+    let rows = sqlx::query(
         r#"
         WITH project_skills AS (
             SELECT 
                 p.id as project_id,
                 COALESCE(
-                    json_agg(
-                        json_build_object(
+                    jsonb_agg(
+                        jsonb_build_object(
                             'id', s.id,
                             'name', s.name,
                             'description', s.description,
@@ -39,7 +31,7 @@ pub async fn fetch_projects(pool: &PgPool) -> Result<Vec<Project>, sqlx::Error> 
                             'proficiency', s.proficiency
                         )
                     ) FILTER (WHERE s.id IS NOT NULL),
-                    '[]'::json
+                    '[]'::jsonb
                 ) as skills
             FROM projects p
             LEFT JOIN projects_skills ps ON p.id = ps.project_id
@@ -52,26 +44,27 @@ pub async fn fetch_projects(pool: &PgPool) -> Result<Vec<Project>, sqlx::Error> 
             p.description,
             p.github_url,
             p.job_id,
-            COALESCE(ps.skills, '[]'::json) as skills
+            COALESCE(ps.skills, '[]'::jsonb) as skills
         FROM projects p
         LEFT JOIN project_skills ps ON p.id = ps.project_id
         ORDER BY p.id ASC
         "#
     )
+    .map(|row: PgRow| {
+        let skills_json: Value = row.try_get("skills").unwrap_or(Value::Array(vec![]));
+        let skills: Vec<Skill> = serde_json::from_value(skills_json).unwrap_or_default();
+            
+        Project {
+            id: row.try_get("id").unwrap_or_default(),
+            name: row.try_get("name").unwrap_or_default(),
+            description: row.try_get("description").unwrap_or_default(),
+            github_url: row.try_get("github_url").unwrap_or_default(),
+            job_id: row.try_get("job_id").unwrap_or_default(),
+            skills,
+        }
+    })
     .fetch_all(pool)
     .await?;
 
-    let projects = rows.into_iter().map(|row| {
-        let skills: Vec<Skill> = serde_json::from_value(row.skills).unwrap_or_default();
-        Project {
-            id: row.id,
-            name: row.name,
-            description: row.description,
-            github_url: row.github_url,
-            job_id: row.job_id,
-            skills,
-        }
-    }).collect();
-
-    Ok(projects)
+    Ok(rows)
 }
