@@ -1,0 +1,4 @@
+### GET request to local server
+GET localhost:8080/projects
+
+###
