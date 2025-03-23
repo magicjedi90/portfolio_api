@@ -1,5 +1,7 @@
-use std::env;
-use axum::{Router, routing::get, Extension};
+use axum::{
+    Router,
+    routing::get,
+};
 use std::net::SocketAddr;
 use dotenv::dotenv;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -10,10 +12,10 @@ mod db;
 mod models;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() {
     // Load environment variables
     dotenv().ok();
-    tracing::info!("{}", env::var("DATABASE_URL").unwrap_or_else(|err| format!("Error: {}", err)));
+
     // Initialize logging
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::try_from_default_env()
@@ -22,23 +24,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     // Initialize database connection
-    let pool = db::connection::connect().await?;
+    let pool = match db::connection::connect().await {
+        Ok(pool) => pool,
+        Err(e) => {
+            tracing::error!("Failed to connect to database: {}", e);
+            std::process::exit(1);
+        }
+    };
 
-    // Build application with routes
+    // Build our application with routes
     let app = Router::new()
+        // Add routes here
         .route("/projects", get(handlers::projects::get_projects))
-        .layer(Extension(pool.clone()));
+        .with_state(pool);
 
+    // Run our app with hyper
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::info!("🚀 Server running on {}", addr);
 
-    // Start server with graceful shutdown
-    let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app.as_service())
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    
+    axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
-        .await?;
-
-    Ok(())
+        .await
+        .unwrap();
 }
 
 async fn shutdown_signal() {
