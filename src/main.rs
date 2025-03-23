@@ -1,5 +1,5 @@
 use std::env;
-use axum::{Router, routing::get, Extension, ServiceExt};
+use axum::{Router, routing::get, Extension};
 use std::net::SocketAddr;
 use dotenv::dotenv;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pool = db::connection::connect().await?;
 
     // Build application with routes
-    let app = Router::<_, axum::body::Body>::new()
+    let app = Router::new()
         .route("/projects", get(handlers::projects::get_projects))
         .layer(Extension(pool.clone()));
 
@@ -33,8 +33,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("🚀 Server running on {}", addr);
 
     // Start server with graceful shutdown
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    axum::serve(listener, app.as_service())
         .with_graceful_shutdown(shutdown_signal())
         .await?;
 
