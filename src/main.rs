@@ -1,15 +1,42 @@
 use axum::{
     Router,
     routing::get,
+    Json,
 };
 use std::net::SocketAddr;
 use dotenv::dotenv;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use tokio::signal;
+use utoipa::OpenApi;
+use utoipa_axum::router::OpenApiRouter;
+use utoipa_axum::routes;
 
 mod handlers;
 mod db;
 mod models;
+
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        handlers::projects::get_projects,
+    ),
+    components(
+        schemas(
+            models::project::Project,
+            models::skill::Skill,
+            crate::db::proficiency_enum::Proficiency
+        )
+    ),
+    tags(
+        (name = "projects", description = "Project management endpoints")
+    ),
+    info(
+        title = "Portfolio API",
+        version = "0.1.0",
+        description = "API for managing portfolio projects and skills"
+    )
+)]
+struct ApiDoc;
 
 #[tokio::main]
 async fn main() {
@@ -32,15 +59,19 @@ async fn main() {
         }
     };
 
-    // Build our application with routes
-    let app = Router::new()
-        // Add routes here
-        .route("/projects", get(handlers::projects::get_projects))
+    // Build our application with routes using OpenApiRouter
+    let (router, _) = OpenApiRouter::new()
+        .routes(routes!(handlers::projects::get_projects))
+        .split_for_parts();
+
+    let app = router
+        .route("/api-docs/openapi.json", get(|| async { Json(ApiDoc::openapi()) }))
         .with_state(pool);
 
-    // Run our app with hyper
+    // TODO make this configurable but use for default local run
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
-    tracing::info!("🚀 Server running on {}", addr);
+    tracing::info!("Server running on {}", addr);
+    tracing::info!("OpenAPI documentation available at http://{}/api-docs/openapi.json", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     
