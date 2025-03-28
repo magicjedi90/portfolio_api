@@ -1,7 +1,4 @@
-use axum::{
-    routing::get,
-    Json,
-};
+use axum::Router;
 use std::net::SocketAddr;
 use dotenv::dotenv;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -9,6 +6,7 @@ use tokio::signal;
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_axum::routes;
+use utoipa_swagger_ui::{SwaggerUi, Config};
 
 mod handlers;
 mod db;
@@ -63,14 +61,19 @@ async fn main() {
         .routes(routes!(handlers::projects::get_projects))
         .split_for_parts();
 
+    let config = Config::new(["/api-docs/openapi.json"]);
+    let swagger_ui = SwaggerUi::new("/swagger-ui")
+        .config(config)
+        .url("/api-docs/openapi.json", ApiDoc::openapi());
+
     let app = router
-        .route("/api-docs/openapi.json", get(|| async { Json(ApiDoc::openapi()) }))
+        .merge(swagger_ui)
         .with_state(pool);
 
     // TODO make this configurable but use for default local run
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::info!("Server running on {}", addr);
-    tracing::info!("OpenAPI documentation available at http://{}/api-docs/openapi.json", addr);
+    tracing::info!("Swagger UI available at http://{}/swagger-ui", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     
