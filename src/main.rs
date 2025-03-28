@@ -10,29 +10,9 @@ use utoipa_swagger_ui::{SwaggerUi, Config};
 mod handlers;
 mod db;
 mod models;
+mod api_docs;
 
-#[derive(OpenApi)]
-#[openapi(
-    paths(
-        handlers::projects::get_projects,
-    ),
-    components(
-        schemas(
-            models::project::Project,
-            models::skill::Skill,
-            crate::db::proficiency_enum::Proficiency
-        )
-    ),
-    tags(
-        (name = "projects", description = "Project management endpoints")
-    ),
-    info(
-        title = "Portfolio API",
-        version = "0.1.0",
-        description = "API for managing portfolio projects and skills"
-    )
-)]
-struct ApiDoc;
+use api_docs::ApiDoc;
 
 #[tokio::main]
 async fn main() {
