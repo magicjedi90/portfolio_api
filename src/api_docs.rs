@@ -4,6 +4,7 @@ use utoipa::OpenApi;
 #[openapi(
     paths(
         crate::handlers::projects::get_projects,
+        crate::handlers::projects::get_project_by_id,
     ),
     components(
         schemas(

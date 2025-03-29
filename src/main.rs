@@ -2,17 +2,13 @@ use std::net::SocketAddr;
 use dotenv::dotenv;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use tokio::signal;
-use utoipa::OpenApi;
-use utoipa_axum::router::OpenApiRouter;
-use utoipa_axum::routes;
-use utoipa_swagger_ui::{SwaggerUi, Config};
+
 
 mod handlers;
 mod db;
 mod models;
 mod api_docs;
-
-use api_docs::ApiDoc;
+mod routes;
 
 #[tokio::main]
 async fn main() {
@@ -35,19 +31,8 @@ async fn main() {
         }
     };
 
-    // Build our application with routes using OpenApiRouter
-    let (router, _) = OpenApiRouter::new()
-        .routes(routes!(handlers::projects::get_projects))
-        .split_for_parts();
-
-    let config = Config::new(["/api-docs/openapi.json"]);
-    let swagger_ui = SwaggerUi::new("/swagger-ui")
-        .config(config)
-        .url("/api-docs/openapi.json", ApiDoc::openapi());
-
-    let app = router
-        .merge(swagger_ui)
-        .with_state(pool);
+    // Create the application router
+    let app = routes::create_router(pool);
 
     // TODO make this configurable but use for default local run
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
