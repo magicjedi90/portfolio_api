@@ -26,3 +26,33 @@ pub async fn get_projects(State(pool): State<PgPool>) -> impl IntoResponse {
         }
     }
 }
+
+/// Get a single project by ID
+/// 
+/// Returns a single project if found, or 404 if not found
+#[utoipa::path(
+    get,
+    path = "/projects/{project_id}",
+    responses(
+        (status = 200, description = "Project retrieved successfully", body = Project),
+        (status = 404, description = "Project not found"),
+        (status = 500, description = "Internal server error")
+    ),
+    params(
+        ("project_id" = i32, Path, description = "ID of the project to retrieve")
+    ),
+    tag = "projects"
+)]
+pub async fn get_project_by_id(
+    State(pool): State<PgPool>,
+    axum::extract::Path(project_id): axum::extract::Path<i32>,
+) -> impl IntoResponse {
+    match projects_db::fetch_project_by_id(&pool, project_id).await {
+        Ok(Some(project)) => (StatusCode::OK, Json(project)).into_response(),
+        Ok(None) => (StatusCode::NOT_FOUND, "Project not found").into_response(),
+        Err(e) => {
+            error!("Failed to get project: {:?}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch project").into_response()
+        }
+    }
+}
