@@ -1,9 +1,10 @@
+use crate::api_docs::ApiDoc;
+use crate::handlers::projects::{get_project_by_id, get_projects};
 use axum::{Router, routing::get};
 use sqlx::PgPool;
+use tower_http::cors::{Any, CorsLayer};
 use utoipa::OpenApi;
-use utoipa_swagger_ui::{SwaggerUi, Config};
-use crate::api_docs::ApiDoc;
-use crate::handlers::projects::{get_projects, get_project_by_id};
+use utoipa_swagger_ui::{Config, SwaggerUi};
 
 /// Creates and configures all API routes
 pub fn create_router(pool: PgPool) -> Router {
@@ -20,8 +21,16 @@ pub fn create_router(pool: PgPool) -> Router {
         .config(config)
         .url("/api-docs/openapi.json", ApiDoc::openapi());
 
+    // Configure CORS
+    // TODO tighten up security before prod deployment - make this biz configurable
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
+
     // Nest the routers under their respective paths
     app.nest("/projects", projects_router)
         .merge(swagger_ui)
+        .layer(cors)
         .with_state(pool)
-} 
+}
