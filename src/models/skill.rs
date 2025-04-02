@@ -15,4 +15,5 @@ pub struct Skill {
     pub official_site_url: String,
     /// Proficiency level in the technology
     pub proficiency: Proficiency,
+    pub parent_id: Option<i32>,
 }

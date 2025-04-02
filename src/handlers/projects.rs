@@ -56,3 +56,31 @@ pub async fn get_project_by_id(
         }
     }
 }
+
+/// Get all projects for a specific job
+/// 
+/// Returns a list of all projects associated with the specified job
+#[utoipa::path(
+    get,
+    path = "/projects/job/{job_id}",
+    responses(
+        (status = 200, description = "List of projects retrieved successfully", body = Vec<Project>),
+        (status = 500, description = "Internal server error")
+    ),
+    params(
+        ("job_id" = i32, Path, description = "ID of the job to fetch projects for")
+    ),
+    tag = "projects"
+)]
+pub async fn get_projects_by_job(
+    State(pool): State<PgPool>,
+    axum::extract::Path(job_id): axum::extract::Path<i32>,
+) -> impl IntoResponse {
+    match projects_db::fetch_projects_by_job(&pool, job_id).await {
+        Ok(projects) => (StatusCode::OK, Json(projects)).into_response(),
+        Err(e) => {
+            error!("Failed to get projects for job {}: {:?}", job_id, e);
+            (StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch projects").into_response()
+        }
+    }
+}

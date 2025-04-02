@@ -9,7 +9,8 @@ const SKILL_QUERY: &str = r#"
         name,
         description,
         official_site_url,
-        proficiency
+        proficiency,
+        parent_id
     FROM skills
 "#;
 
@@ -20,6 +21,7 @@ fn map_row_to_skill(row: PgRow) -> Skill {
         description: row.try_get("description").unwrap_or_default(),
         official_site_url: row.try_get("official_site_url").unwrap_or_default(),
         proficiency: row.try_get("proficiency").unwrap_or_default(),
+        parent_id: row.try_get("parent_id").unwrap_or_default(),
     }
 }
 

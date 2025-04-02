@@ -61,7 +61,7 @@ fn map_row_to_project(row: PgRow) -> Project {
 ///
 /// * `Result<Vec<Project>, sqlx::Error>` - A vector of projects if successful, or a database error
 pub async fn fetch_projects(pool: &PgPool) -> Result<Vec<Project>, sqlx::Error> {
-    let rows = sqlx::query(PROJECT_SKILLS_QUERY)
+    let rows = sqlx::query(format!("{} ORDER BY p.id ASC", PROJECT_SKILLS_QUERY).as_str())
         .map(map_row_to_project)
         .fetch_all(pool)
         .await?;
@@ -87,4 +87,24 @@ pub async fn fetch_project_by_id(pool: &PgPool, project_id: i32) -> Result<Optio
         .await?;
 
     Ok(row)
+}
+
+/// Fetches all projects associated with a specific job from the database.
+///
+/// # Arguments
+///
+/// * `pool` - The database connection pool
+/// * `job_id` - The ID of the job to fetch projects for
+///
+/// # Returns
+///
+/// * `Result<Vec<Project>, sqlx::Error>` - A vector of projects if successful, or a database error
+pub async fn fetch_projects_by_job(pool: &PgPool, job_id: i32) -> Result<Vec<Project>, sqlx::Error> {
+    let rows = sqlx::query(format!("{} WHERE p.job_id = $1 ORDER BY p.id ASC", PROJECT_SKILLS_QUERY).as_str())
+        .bind(job_id)
+        .map(map_row_to_project)
+        .fetch_all(pool)
+        .await?;
+
+    Ok(rows)
 }
