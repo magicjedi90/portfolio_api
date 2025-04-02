@@ -1,3 +1,3 @@
 pub mod project;
 pub mod skill;
-mod job;
+pub(crate) mod job;
