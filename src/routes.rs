@@ -1,6 +1,7 @@
 use crate::api_docs::ApiDoc;
 use crate::handlers::projects::{get_project_by_id, get_projects};
 use crate::handlers::jobs::{get_job_by_id, get_jobs};
+use crate::handlers::skills::{get_skill_by_id, get_skills};
 use axum::{Router, routing::get};
 use sqlx::PgPool;
 use tower_http::cors::{Any, CorsLayer};
@@ -21,6 +22,10 @@ pub fn create_router(pool: PgPool) -> Router {
         .route("/", get(get_jobs))
         .route("/{job_id}", get(get_job_by_id));
 
+    let skills_router = Router::new()
+        .route("/", get(get_skills))
+        .route("/{skill_id}", get(get_skill_by_id));
+
     let config = Config::new(["/api-docs/openapi.json"]);
     let swagger_ui = SwaggerUi::new("/swagger-ui")
         .config(config)
@@ -36,6 +41,7 @@ pub fn create_router(pool: PgPool) -> Router {
     // Nest the routers under their respective paths
     app.nest("/projects", projects_router)
         .nest("/jobs", jobs_router)
+        .nest("/skills", skills_router)
         .merge(swagger_ui)
         .layer(cors)
         .with_state(pool)

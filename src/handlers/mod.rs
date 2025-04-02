@@ -1,2 +1,3 @@
 pub mod projects;
-pub(crate) mod jobs;
+pub mod jobs;
+pub mod skills;

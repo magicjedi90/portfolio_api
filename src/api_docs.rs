@@ -7,6 +7,8 @@ use utoipa::OpenApi;
         crate::handlers::projects::get_project_by_id,
         crate::handlers::jobs::get_jobs,
         crate::handlers::jobs::get_job_by_id,
+        crate::handlers::skills::get_skills,
+        crate::handlers::skills::get_skill_by_id,
     ),
     components(
         schemas(
@@ -18,7 +20,8 @@ use utoipa::OpenApi;
     ),
     tags(
         (name = "projects", description = "Project management endpoints"),
-        (name = "jobs", description = "Job history endpoints")
+        (name = "jobs", description = "Job history endpoints"),
+        (name = "skills", description = "Skills management endpoints")
     ),
     info(
         title = "Portfolio API",

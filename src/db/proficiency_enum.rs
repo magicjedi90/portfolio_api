@@ -3,10 +3,11 @@ use sqlx::Type;
 use utoipa::ToSchema;
 
 /// Represents the proficiency level in a technology
-#[derive(Debug, Serialize, Deserialize, Clone, Type, ToSchema)]
-#[sqlx(type_name = "proficiency")]
+#[derive(Debug, Serialize, Deserialize, Clone, Type, ToSchema, Default)]
+#[sqlx(type_name = "proficiency", rename_all = "lowercase")]
 pub enum Proficiency {
     /// Basic understanding and ability to use the technology
+    #[default]
     Beginner,
     /// Good understanding and practical experience with the technology
     Intermediate,
