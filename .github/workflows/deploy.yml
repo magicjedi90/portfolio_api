@@ -12,7 +12,7 @@ env:
   REPOSITORY: sindbad-portfolio-docker
   SERVICE_NAME: portfolio-api
   SERVICE_ACCOUNT: sindbad-portfolio-bucket-read@wide-bivouac-453212-v8.iam.gserviceaccount.com
-  CLOUD_SQL_INSTANCE: wide-bivouac-453212-v8:us-west1:portfolio-id
+  DB_USER: portfolio_api_user
 
 jobs:
   deploy:
@@ -55,12 +55,10 @@ jobs:
           flags: |
             --allow-unauthenticated
             --service-account=${{ env.SERVICE_ACCOUNT }}
-            --add-cloudsql-instances=${{ env.CLOUD_SQL_INSTANCE }}
           env_vars: |
-            DATABASE_URL=postgres:///${{ env.PROJECT_ID }}:us-west1:portfolio-id/portfolio?host=/cloudsql/${{ env.PROJECT_ID }}:us-west1:portfolio-id&user=postgres
+            DATABASE_URL=postgres://${{ env.DB_USER }}:${{ secrets.DB_PASSWORD }}@34.168.149.226:5432/portfolio
             RUST_LOG=info
             BUCKET_NAME=sindbad-portfolio-bucket
-            cloudSqlInstance=${{ env.PROJECT_ID }}:us-west1:portfolio-id
 
       - name: Show Output URL
         run: echo "Service URL ${{ steps.deploy.outputs.url }}" 
