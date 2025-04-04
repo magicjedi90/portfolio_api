@@ -4,8 +4,11 @@ FROM rust:latest as builder
 # Set working directory
 WORKDIR /app
 
-# Copy source code and build
-COPY . .
+# Copy only the files needed for building
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+
+# Build dependencies first (this layer will be cached)
 RUN cargo build --release
 
 # Use a smaller Debian-based image for final runtime
