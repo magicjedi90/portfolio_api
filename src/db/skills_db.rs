@@ -2,6 +2,7 @@ use crate::models::skill::Skill;
 use sqlx::PgPool;
 use sqlx::postgres::PgRow;
 use sqlx::Row;
+use tracing::error;
 
 const SKILL_QUERY: &str = r#"
     SELECT 
@@ -15,12 +16,21 @@ const SKILL_QUERY: &str = r#"
 "#;
 
 fn map_row_to_skill(row: PgRow) -> Skill {
+    let proficiency = match row.try_get::<crate::db::proficiency_enum::Proficiency, _>("proficiency") {
+        Ok(p) => p,
+        Err(e) => {
+            error!("Failed to get proficiency from database row: {:?}", e);
+            error!("Raw proficiency value: {:?}", row.try_get::<String, _>("proficiency"));
+            crate::db::proficiency_enum::Proficiency::Beginner
+        }
+    };
+
     Skill {
         id: row.try_get("id").unwrap_or_default(),
         name: row.try_get("name").unwrap_or_default(),
         description: row.try_get("description").unwrap_or_default(),
         official_site_url: row.try_get("official_site_url").unwrap_or_default(),
-        proficiency: row.try_get("proficiency").unwrap_or_default(),
+        proficiency,
         parent_id: row.try_get("parent_id").unwrap_or_default(),
     }
 }
