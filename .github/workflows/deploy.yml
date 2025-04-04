@@ -12,7 +12,8 @@ env:
   REPOSITORY: sindbad-portfolio-docker
   SERVICE_NAME: portfolio-api
   SERVICE_ACCOUNT: sindbad-portfolio-bucket-read@wide-bivouac-453212-v8.iam.gserviceaccount.com
-  DB_USER: portfolio_api_user
+  DB_USER: magicjedi90
+  CLOUD_SQL_INSTANCE: wide-bivouac-453212-v8:us-west1:portfolio-id
 
 jobs:
   deploy:
@@ -47,18 +48,20 @@ jobs:
 
       - name: Deploy to Cloud Run
         id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: ${{ env.SERVICE_NAME }}
-          region: ${{ env.REGION }}
-          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/portfolio-api:${{ github.sha }}
-          flags: |
-            --allow-unauthenticated
-            --service-account=${{ env.SERVICE_ACCOUNT }}
-          env_vars: |
-            DATABASE_URL=postgres://${{ env.DB_USER }}:${{ secrets.DB_PASSWORD }}@34.168.149.226:5432/portfolio
-            RUST_LOG=info
-            BUCKET_NAME=sindbad-portfolio-bucket
+        run: |
+          SERVICE_URL=$(gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/portfolio-api:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --service-account ${{ env.SERVICE_ACCOUNT }} \
+            --min-instances 1 \
+            --max-instances 10 \
+            --timeout 300s \
+            --vpc-connector portfolio-api-connector \
+            --set-env-vars DATABASE_URL="postgres://${{ env.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost/postgres?host=/cloudsql/${{ env.CLOUD_SQL_INSTANCE }}",RUST_LOG=info,BUCKET_NAME=sindbad_portfolio \
+            --format="value(status.url)")
+          echo "url=${SERVICE_URL}" >> $GITHUB_OUTPUT
 
       - name: Show Output URL
         run: echo "Service URL ${{ steps.deploy.outputs.url }}" 

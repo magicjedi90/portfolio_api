@@ -34,8 +34,13 @@ async fn main() {
     // Create the application router
     let app = routes::create_router(pool);
 
-    // TODO make this configurable but use for default local run
-    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
+    // Get port from environment variable or use 8080 as default
+    let port = std::env::var("PORT")
+        .unwrap_or_else(|_| "8081".to_string())
+        .parse::<u16>()
+        .expect("PORT must be a valid port number");
+
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
     tracing::info!("Server running on {}", addr);
     tracing::info!("Swagger UI available at http://{}/swagger-ui", addr);
 
