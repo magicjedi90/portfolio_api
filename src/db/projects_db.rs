@@ -121,10 +121,9 @@ pub async fn fetch_projects_by_job(pool: &PgPool, job_id: i32) -> Result<Vec<Pro
 /// * `Result<Vec<Project>, sqlx::Error>` - A vector of projects if successful, or a database error
 pub async fn fetch_projects_by_skill(pool: &PgPool, skill_id: i32) -> Result<Vec<Project>, sqlx::Error> {
     let rows = sqlx::query(
-        format!(
-            r#"
+        r#"
             WITH project_skills AS (
-                SELECT 
+                SELECT
                     p.id as project_id,
                     COALESCE(
                         jsonb_agg(
@@ -142,12 +141,12 @@ pub async fn fetch_projects_by_skill(pool: &PgPool, skill_id: i32) -> Result<Vec
                 LEFT JOIN projects_skills ps ON p.id = ps.project_id
                 LEFT JOIN skills s ON ps.skill_id = s.id
                 WHERE EXISTS (
-                    SELECT 1 FROM projects_skills ps2 
+                    SELECT 1 FROM projects_skills ps2
                     WHERE ps2.project_id = p.id AND ps2.skill_id = $1
                 )
                 GROUP BY p.id
             )
-            SELECT 
+            SELECT
                 p.id,
                 p.name,
                 p.description,
@@ -157,12 +156,11 @@ pub async fn fetch_projects_by_skill(pool: &PgPool, skill_id: i32) -> Result<Vec
             FROM projects p
             LEFT JOIN project_skills ps ON p.id = ps.project_id
             WHERE EXISTS (
-                SELECT 1 FROM projects_skills ps2 
+                SELECT 1 FROM projects_skills ps2
                 WHERE ps2.project_id = p.id AND ps2.skill_id = $1
             )
             ORDER BY p.id ASC
-            "#,
-        ).as_str()
+            "#.to_string().as_str()
     )
     .bind(skill_id)
     .map(map_row_to_project)
