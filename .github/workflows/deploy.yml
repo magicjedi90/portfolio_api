@@ -59,7 +59,7 @@ jobs:
             --max-instances 10 \
             --timeout 300s \
             --vpc-connector portfolio-api-connector \
-            --set-env-vars DATABASE_URL="postgres://${{ env.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost/postgres?host=/cloudsql/${{ env.CLOUD_SQL_INSTANCE }}",RUST_LOG=info,BUCKET_NAME=sindbad_portfolio \
+            --set-env-vars DATABASE_URL="postgres://${{ env.DB_USER }}:${{ secrets.DB_PASSWORD }}@34.168.85.183:5432/postgres?cloudSqlInstance=${{ env.CLOUD_SQL_INSTANCE }}",RUST_LOG=info,BUCKET_NAME=sindbad_portfolio \
             --format="value(status.url)")
           echo "url=${SERVICE_URL}" >> $GITHUB_OUTPUT
 
