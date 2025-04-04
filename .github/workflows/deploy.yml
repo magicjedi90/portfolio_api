@@ -1,5 +1,6 @@
 name: Deploy to Cloud Run
 
+# Optimized build using rust:slim base image
 on:
   push:
     branches:
@@ -51,6 +52,11 @@ jobs:
           region: ${{ env.REGION }}
           image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/portfolio-api:${{ github.sha }}
           flags: --allow-unauthenticated --service-account=${{ env.SERVICE_ACCOUNT }}
+          env_vars: |
+            DATABASE_URL=postgres:///${{ env.PROJECT_ID }}:us-west1:portfolio-id/portfolio?host=/cloudsql/${{ env.PROJECT_ID }}:us-west1:portfolio-id&user=postgres
+            RUST_LOG=info
+            BUCKET_NAME=sindbad-portfolio-bucket
+            cloudSqlInstance=${{ env.PROJECT_ID }}:us-west1:portfolio-id
 
       - name: Show Output URL
         run: echo "Service URL ${{ steps.deploy.outputs.url }}" 
