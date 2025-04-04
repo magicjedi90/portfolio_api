@@ -6,6 +6,7 @@ use utoipa::OpenApi;
         crate::handlers::projects::get_projects,
         crate::handlers::projects::get_project_by_id,
         crate::handlers::projects::get_projects_by_job,
+        crate::handlers::projects::get_projects_by_skill,
         crate::handlers::jobs::get_jobs,
         crate::handlers::jobs::get_job_by_id,
         crate::handlers::skills::get_skills,

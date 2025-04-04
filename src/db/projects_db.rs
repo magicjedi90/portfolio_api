@@ -108,3 +108,66 @@ pub async fn fetch_projects_by_job(pool: &PgPool, job_id: i32) -> Result<Vec<Pro
 
     Ok(rows)
 }
+
+/// Fetches all projects that use a specific skill from the database.
+///
+/// # Arguments
+///
+/// * `pool` - The database connection pool
+/// * `skill_id` - The ID of the skill to fetch projects for
+///
+/// # Returns
+///
+/// * `Result<Vec<Project>, sqlx::Error>` - A vector of projects if successful, or a database error
+pub async fn fetch_projects_by_skill(pool: &PgPool, skill_id: i32) -> Result<Vec<Project>, sqlx::Error> {
+    let rows = sqlx::query(
+        format!(
+            r#"
+            WITH project_skills AS (
+                SELECT 
+                    p.id as project_id,
+                    COALESCE(
+                        jsonb_agg(
+                            jsonb_build_object(
+                                'id', s.id,
+                                'name', s.name,
+                                'description', s.description,
+                                'official_site_url', s.official_site_url,
+                                'proficiency', s.proficiency
+                            )
+                        ) FILTER (WHERE s.id IS NOT NULL),
+                        '[]'::jsonb
+                    ) as skills
+                FROM projects p
+                LEFT JOIN projects_skills ps ON p.id = ps.project_id
+                LEFT JOIN skills s ON ps.skill_id = s.id
+                WHERE EXISTS (
+                    SELECT 1 FROM projects_skills ps2 
+                    WHERE ps2.project_id = p.id AND ps2.skill_id = $1
+                )
+                GROUP BY p.id
+            )
+            SELECT 
+                p.id,
+                p.name,
+                p.description,
+                p.github_url,
+                p.job_id,
+                COALESCE(ps.skills, '[]'::jsonb) as skills
+            FROM projects p
+            LEFT JOIN project_skills ps ON p.id = ps.project_id
+            WHERE EXISTS (
+                SELECT 1 FROM projects_skills ps2 
+                WHERE ps2.project_id = p.id AND ps2.skill_id = $1
+            )
+            ORDER BY p.id ASC
+            "#,
+        ).as_str()
+    )
+    .bind(skill_id)
+    .map(map_row_to_project)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows)
+}

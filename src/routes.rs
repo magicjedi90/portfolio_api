@@ -1,5 +1,5 @@
 use crate::api_docs::ApiDoc;
-use crate::handlers::projects::{get_project_by_id, get_projects, get_projects_by_job};
+use crate::handlers::projects::{get_project_by_id, get_projects, get_projects_by_job, get_projects_by_skill};
 use crate::handlers::jobs::{get_job_by_id, get_jobs};
 use crate::handlers::skills::{get_skill_by_id, get_skills};
 use axum::{Router, routing::get};
@@ -17,7 +17,8 @@ pub fn create_router(pool: PgPool) -> Router {
     let projects_router = Router::new()
         .route("/", get(get_projects))
         .route("/{project_id}", get(get_project_by_id))
-        .route("/job/{job_id}", get(get_projects_by_job));
+        .route("/job/{job_id}", get(get_projects_by_job))
+        .route("/skill/{skill_id}", get(get_projects_by_skill));
 
     let jobs_router = Router::new()
         .route("/", get(get_jobs))

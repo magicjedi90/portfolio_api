@@ -41,7 +41,7 @@ fn map_row_to_job(row: PgRow) -> Job {
 ///
 /// * `Result<Vec<Job>, sqlx::Error>` - A vector of jobs if successful, or a database error
 pub async fn fetch_jobs(pool: &PgPool) -> Result<Vec<Job>, sqlx::Error> {
-    let rows = sqlx::query(format!("{} ORDER BY id ASC", JOB_QUERY).as_str())
+    let rows = sqlx::query(format!("{} ORDER BY start_date DESC", JOB_QUERY).as_str())
         .map(map_row_to_job)
         .fetch_all(pool)
         .await?;

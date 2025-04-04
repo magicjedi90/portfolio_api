@@ -84,3 +84,31 @@ pub async fn get_projects_by_job(
         }
     }
 }
+
+/// Get all projects that use a specific skill
+/// 
+/// Returns a list of all projects that use the specified skill
+#[utoipa::path(
+    get,
+    path = "/projects/skill/{skill_id}",
+    responses(
+        (status = 200, description = "List of projects retrieved successfully", body = Vec<Project>),
+        (status = 500, description = "Internal server error")
+    ),
+    params(
+        ("skill_id" = i32, Path, description = "ID of the skill to fetch projects for")
+    ),
+    tag = "projects"
+)]
+pub async fn get_projects_by_skill(
+    State(pool): State<PgPool>,
+    axum::extract::Path(skill_id): axum::extract::Path<i32>,
+) -> impl IntoResponse {
+    match projects_db::fetch_projects_by_skill(&pool, skill_id).await {
+        Ok(projects) => (StatusCode::OK, Json(projects)).into_response(),
+        Err(e) => {
+            error!("Failed to get projects for skill {}: {:?}", skill_id, e);
+            (StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch projects").into_response()
+        }
+    }
+}
