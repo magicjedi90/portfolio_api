@@ -1,0 +1,56 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main  # or your default branch
+
+env:
+  PROJECT_ID: wide-bivouac-453212-v8
+  REGION: us-west1
+  REPOSITORY: sindbad-portfolio-docker
+  SERVICE_NAME: portfolio-api
+  SERVICE_ACCOUNT: sindbad-portfolio-bucket-read@wide-bivouac-453212-v8.iam.gserviceaccount.com
+
+jobs:
+  deploy:
+    name: Deploy to Cloud Run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/14010903385/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider
+          service_account: github-portfolio-deployer@wide-bivouac-453212-v8.iam.gserviceaccount.com
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build and Push Docker image
+        run: |
+          docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/portfolio-api:${{ github.sha }} .
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/portfolio-api:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/portfolio-api:${{ github.sha }}
+          flags: --allow-unauthenticated --service-account=${{ env.SERVICE_ACCOUNT }}
+
+      - name: Show Output URL
+        run: echo "Service URL ${{ steps.deploy.outputs.url }}" 

@@ -11,9 +11,16 @@ COPY src ./src
 # Build dependencies first (this layer will be cached)
 RUN cargo build --release
 
-# Use a smaller Debian-based image for final runtime
-FROM debian:bullseye-slim
+# Use Ubuntu 22.04 as the base image (has OpenSSL 3)
+FROM ubuntu:22.04
 WORKDIR /app
+
+# Install SSL libraries and other runtime dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the built Rust binary from the builder stage
 COPY --from=builder /app/target/release/portfolio-api .
