@@ -13,7 +13,7 @@ env:
   SERVICE_NAME: portfolio-api-wrapper
   IMAGE_NAME: portfolio-api
   REPOSITORY: sindbad-portfolio-docker
-  SERVICE_ACCOUNT: sindbad-portfolio-bucket-read@$PROJECT_ID.iam.gserviceaccount.com
+  SERVICE_ACCOUNT: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
   DB_USER: portfolio_api_user
   CLOUD_SQL_INSTANCE: $PROJECT_ID:us-west1:portfolio-id
 
