@@ -47,7 +47,6 @@ echo "DEBUG: Environment variables:"\n\
 printenv\n\
 echo "DEBUG: Starting server with PORT=${PORT:-8081}"\n\
 export PORT="${PORT:-8081}"\n\
-ldd ./portfolio-api\n\
 ./portfolio-api' > /app/start.sh && \
     chmod +x /app/start.sh
 

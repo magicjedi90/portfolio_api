@@ -3,65 +3,63 @@ name: Deploy to Cloud Run
 # Optimized build using rust:slim base image
 on:
   push:
-    branches:
-      - main  # or your default branch
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 env:
-  PROJECT_ID: wide-bivouac-453212-v8
-  REGION: us-west1
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  RUN_REGION: us-west1
+  SERVICE_NAME: portfolio-api-wrapper
+  IMAGE_NAME: portfolio-api
   REPOSITORY: sindbad-portfolio-docker
-  SERVICE_NAME: portfolio-api
-  SERVICE_ACCOUNT: sindbad-portfolio-bucket-read@wide-bivouac-453212-v8.iam.gserviceaccount.com
-  DB_USER: magicjedi90
-  CLOUD_SQL_INSTANCE: wide-bivouac-453212-v8:us-west1:portfolio-id
+  SERVICE_ACCOUNT: sindbad-portfolio-bucket-read@$PROJECT_ID.iam.gserviceaccount.com
+  DB_USER: portfolio_api_user
+  CLOUD_SQL_INSTANCE: $PROJECT_ID:us-west1:portfolio-id
 
 jobs:
   deploy:
     name: Deploy to Cloud Run
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
+      contents: 'read'
+      id-token: 'write'
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Google Auth
-        id: auth
+      - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/14010903385/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider
-          service_account: github-portfolio-deployer@wide-bivouac-453212-v8.iam.gserviceaccount.com
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure docker for Artifact Registry
-        run: |
-          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+      - name: Configure Docker
+        run: gcloud auth configure-docker
 
-      - name: Build and Push Docker image
+      - name: Build and push Docker image
         run: |
-          docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/portfolio-api:${{ github.sha }} .
-          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/portfolio-api:${{ github.sha }}
+          docker build -t us-west1-docker.pkg.dev/$PROJECT_ID/sindbad-portfolio-docker/$IMAGE_NAME:latest .
+          docker push us-west1-docker.pkg.dev/$PROJECT_ID/sindbad-portfolio-docker/$IMAGE_NAME:latest
 
       - name: Deploy to Cloud Run
-        id: deploy
         run: |
-          SERVICE_URL=$(gcloud run deploy ${{ env.SERVICE_NAME }} \
-            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/portfolio-api:${{ github.sha }} \
-            --region ${{ env.REGION }} \
-            --platform managed \
+          gcloud run deploy $SERVICE_NAME \
+            --image=us-west1-docker.pkg.dev/$PROJECT_ID/sindbad-portfolio-docker/$IMAGE_NAME:latest \
+            --region=$RUN_REGION \
+            --platform=managed \
             --allow-unauthenticated \
-            --service-account ${{ env.SERVICE_ACCOUNT }} \
-            --min-instances 1 \
-            --max-instances 10 \
-            --timeout 300s \
-            --vpc-connector portfolio-api-connector \
-            --set-env-vars DATABASE_URL="postgres://${{ env.DB_USER }}:${{ secrets.DB_PASSWORD }}@34.168.85.183:5432/postgres?cloudSqlInstance=${{ env.CLOUD_SQL_INSTANCE }}",RUST_LOG=info,BUCKET_NAME=sindbad_portfolio \
-            --format="value(status.url)")
-          echo "url=${SERVICE_URL}" >> $GITHUB_OUTPUT
+            --service-account=$SERVICE_ACCOUNT \
+            --min-instances=1 \
+            --max-instances=10 \
+            --timeout=300s \
+            --set-env-vars=DATABASE_URL="postgres://magicjedi90:Bin%40rySuns3t@34.168.85.183:5432/postgres?sslmode=disable",RUST_LOG=info,BUCKET_NAME=sindbad-portfolio-bucket \
+            --no-cpu-throttling \
+            --cpu-boost
 
       - name: Show Output URL
         run: echo "Service URL ${{ steps.deploy.outputs.url }}" 
