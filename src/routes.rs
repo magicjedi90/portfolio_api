@@ -7,6 +7,7 @@ use sqlx::PgPool;
 use tower_http::cors::{Any, CorsLayer};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::{Config, SwaggerUi};
+use axum::http::HeaderValue;
 
 /// Creates and configures all API routes
 pub fn create_router(pool: PgPool) -> Router {
@@ -34,9 +35,8 @@ pub fn create_router(pool: PgPool) -> Router {
         .url("/api-docs/openapi.json", ApiDoc::openapi());
 
     // Configure CORS
-    // TODO tighten up security before prod deployment - make this biz configurable
     let cors = CorsLayer::new()
-        .allow_origin(Any)
+        .allow_origin(HeaderValue::from_static("https://sindbadmcintosh.com"))
         .allow_methods(Any)
         .allow_headers(Any);
 
