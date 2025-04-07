@@ -17,7 +17,7 @@ const PROJECT_SKILLS_QUERY: &str = r#"
                         'description', s.description,
                         'official_site_url', s.official_site_url,
                         'proficiency', s.proficiency
-                    )
+                    ) ORDER BY s.name ASC
                 ) FILTER (WHERE s.id IS NOT NULL),
                 '[]'::jsonb
             ) as skills
