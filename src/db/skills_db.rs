@@ -1,7 +1,7 @@
 use crate::models::skill::Skill;
 use sqlx::PgPool;
-use sqlx::postgres::PgRow;
 use sqlx::Row;
+use sqlx::postgres::PgRow;
 use tracing::error;
 
 const SKILL_QUERY: &str = r#"
@@ -16,14 +16,18 @@ const SKILL_QUERY: &str = r#"
 "#;
 
 fn map_row_to_skill(row: PgRow) -> Skill {
-    let proficiency = match row.try_get::<crate::db::proficiency_enum::Proficiency, _>("proficiency") {
-        Ok(p) => p,
-        Err(e) => {
-            error!("Failed to get proficiency from database row: {:?}", e);
-            error!("Raw proficiency value: {:?}", row.try_get::<String, _>("proficiency"));
-            crate::db::proficiency_enum::Proficiency::Beginner
-        }
-    };
+    let proficiency =
+        match row.try_get::<crate::db::proficiency_enum::Proficiency, _>("proficiency") {
+            Ok(p) => p,
+            Err(e) => {
+                error!("Failed to get proficiency from database row: {:?}", e);
+                error!(
+                    "Raw proficiency value: {:?}",
+                    row.try_get::<String, _>("proficiency")
+                );
+                crate::db::proficiency_enum::Proficiency::Beginner
+            }
+        };
 
     Skill {
         id: row.try_get("id").unwrap_or_default(),
@@ -71,4 +75,4 @@ pub async fn fetch_skill_by_id(pool: &PgPool, skill_id: i32) -> Result<Option<Sk
         .await?;
 
     Ok(row)
-} 
+}

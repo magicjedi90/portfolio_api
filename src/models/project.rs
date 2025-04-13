@@ -1,5 +1,5 @@
-use serde::{Serialize, Deserialize};
 use crate::models::skill::Skill;
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 /// Represents a portfolio project with its details and metadata

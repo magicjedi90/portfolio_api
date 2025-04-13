@@ -1,12 +1,12 @@
-use axum::{Json, extract::State, http::StatusCode};
 use crate::db::skills_db;
+use crate::models::skill::Skill;
 use axum::response::IntoResponse;
+use axum::{Json, extract::State, http::StatusCode};
 use sqlx::PgPool;
 use tracing::error;
-use crate::models::skill::Skill;
 
 /// Get all skills
-/// 
+///
 /// Returns a list of all skills in the portfolio
 #[utoipa::path(
     get,
@@ -28,7 +28,7 @@ pub async fn get_skills(State(pool): State<PgPool>) -> impl IntoResponse {
 }
 
 /// Get a single skill by ID
-/// 
+///
 /// Returns a single skill if found, or 404 if not found
 #[utoipa::path(
     get,
@@ -55,4 +55,4 @@ pub async fn get_skill_by_id(
             (StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch skill").into_response()
         }
     }
-} 
+}

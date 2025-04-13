@@ -1,7 +1,7 @@
 use crate::models::job::Job;
 use sqlx::PgPool;
-use sqlx::postgres::PgRow;
 use sqlx::Row;
+use sqlx::postgres::PgRow;
 
 const JOB_QUERY: &str = r#"
     SELECT 
@@ -67,4 +67,4 @@ pub async fn fetch_job_by_id(pool: &PgPool, job_id: i32) -> Result<Option<Job>, 
         .await?;
 
     Ok(row)
-} 
+}
