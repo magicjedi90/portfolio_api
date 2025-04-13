@@ -2011,9 +2011,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.44.1"
+version = "1.44.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f382da615b842244d4b8738c82ed1275e6c5dd90c459a30941cd07080b06c91a"
+checksum = "e6b88822cbe49de4185e3a4cbf8321dd487cf5fe0c5c65695fef6346371e9c48"
 dependencies = [
  "backtrace",
  "bytes",
@@ -2067,15 +2067,13 @@ dependencies = [
 
 [[package]]
 name = "tower-http"
-version = "0.5.2"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e9cd434a998747dd2c4276bc96ee2e0c7a2eadf3cae88e52be55a05fa9053f5"
+checksum = "403fa3b783d4b626a8ad51d766ab03cb6d2dbfc46b1c5d4448395e6628dc9697"
 dependencies = [
  "bitflags",
  "bytes",
  "http",
- "http-body",
- "http-body-util",
  "pin-project-lite",
  "tower-layer",
  "tower-service",
@@ -2243,9 +2241,9 @@ dependencies = [
 
 [[package]]
 name = "utoipa-swagger-ui"
-version = "9.0.0"
+version = "9.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "161166ec520c50144922a625d8bc4925cc801b2dda958ab69878527c0e5c5d61"
+checksum = "d29519b3c485df6b13f4478ac909a491387e9ef70204487c3b64b53749aec0be"
 dependencies = [
  "axum",
  "base64",
@@ -2730,18 +2728,16 @@ dependencies = [
 
 [[package]]
 name = "zip"
-version = "2.4.2"
+version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fabe6324e908f85a1c52063ce7aa26b68dcb7eb6dbc83a2d148403c9bc3eba50"
+checksum = "1dcb24d0152526ae49b9b96c1dcf71850ca1e0b882e4e28ed898a93c41334744"
 dependencies = [
  "arbitrary",
  "crc32fast",
  "crossbeam-utils",
- "displaydoc",
  "flate2",
  "indexmap",
  "memchr",
- "thiserror",
  "zopfli",
 ]
 

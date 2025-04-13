@@ -16,6 +16,7 @@ env:
   SERVICE_ACCOUNT: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
   DB_USER: portfolio_api_user
   CLOUD_SQL_INSTANCE: $PROJECT_ID:us-west1:portfolio-id
+  DB_URL: ${{secrets.DB_URL}}
 
 jobs:
   deploy:
@@ -60,7 +61,7 @@ jobs:
             --min-instances=1 \
             --max-instances=10 \
             --timeout=300s \
-            --set-env-vars=DATABASE_URL="?sslmode=disable",RUST_LOG=info,BUCKET_NAME=sindbad-portfolio-bucket \
+            --set-env-vars=DATABASE_URL=$DB_URL,RUST_LOG=info,BUCKET_NAME=sindbad-portfolio-bucket \
             --no-cpu-throttling \
             --cpu-boost
 
