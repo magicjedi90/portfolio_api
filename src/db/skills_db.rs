@@ -1,7 +1,8 @@
+use crate::db::proficiency_enum::Proficiency;
 use crate::models::skill::Skill;
 use sqlx::PgPool;
-use sqlx::Row;
 use sqlx::postgres::PgRow;
+use sqlx::{Error, Row};
 use tracing::error;
 
 const SKILL_QUERY: &str = r#"
@@ -16,18 +17,17 @@ const SKILL_QUERY: &str = r#"
 "#;
 
 fn map_row_to_skill(row: PgRow) -> Skill {
-    let proficiency =
-        match row.try_get::<crate::db::proficiency_enum::Proficiency, _>("proficiency") {
-            Ok(p) => p,
-            Err(e) => {
-                error!("Failed to get proficiency from database row: {:?}", e);
-                error!(
-                    "Raw proficiency value: {:?}",
-                    row.try_get::<String, _>("proficiency")
-                );
-                crate::db::proficiency_enum::Proficiency::Beginner
-            }
-        };
+    let proficiency = match row.try_get::<Proficiency, _>("proficiency") {
+        Ok(p) => p,
+        Err(e) => {
+            error!("Failed to get proficiency from database row: {:?}", e);
+            error!(
+                "Raw proficiency value: {:?}",
+                row.try_get::<String, _>("proficiency")
+            );
+            Proficiency::Beginner
+        }
+    };
 
     Skill {
         id: row.try_get("id").unwrap_or_default(),
@@ -39,40 +39,21 @@ fn map_row_to_skill(row: PgRow) -> Skill {
     }
 }
 
-/// Fetches all skills from the database, ordered by id.
-///
-/// # Arguments
-///
-/// * `pool` - The database connection pool
-///
-/// # Returns
-///
-/// * `Result<Vec<Skill>, sqlx::Error>` - A vector of skills if successful, or a database error
-pub async fn fetch_skills(pool: &PgPool) -> Result<Vec<Skill>, sqlx::Error> {
-    let rows = sqlx::query(format!("{} ORDER BY id ASC", SKILL_QUERY).as_str())
+/// Implements the `SkillsRepository` trait for `PgPool` (used in production)
+
+pub async fn fetch_skills(pool: &PgPool) -> Result<Vec<Skill>, Error> {
+    let query = format!("{} ORDER BY id ASC", SKILL_QUERY);
+    sqlx::query(&query)
         .map(map_row_to_skill)
         .fetch_all(pool)
-        .await?;
-
-    Ok(rows)
+        .await
 }
 
-/// Fetches a single skill by ID from the database.
-///
-/// # Arguments
-///
-/// * `pool` - The database connection pool
-/// * `skill_id` - The ID of the skill to fetch
-///
-/// # Returns
-///
-/// * `Result<Option<Skill>, sqlx::Error>` - The skill if found, None if not found, or a database error
-pub async fn fetch_skill_by_id(pool: &PgPool, skill_id: i32) -> Result<Option<Skill>, sqlx::Error> {
-    let row = sqlx::query(format!("{} WHERE id = $1", SKILL_QUERY).as_str())
+pub async fn fetch_skill_by_id(pool: &PgPool, skill_id: i32) -> Result<Option<Skill>, Error> {
+    let query = format!("{} WHERE id = $1", SKILL_QUERY);
+    sqlx::query(&query)
         .bind(skill_id)
         .map(map_row_to_skill)
         .fetch_optional(pool)
-        .await?;
-
-    Ok(row)
+        .await
 }

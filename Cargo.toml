@@ -16,3 +16,5 @@ chrono = { version = "0.4.40", features = ["serde"] }
 utoipa = { version = "5", features = ["axum_extras", "chrono"] }
 utoipa-swagger-ui = { version = "9.0.1", features = ["axum"] }
 dotenv = "0.15"
+hyper = "1.6.0"
+tower = "0.5.2"

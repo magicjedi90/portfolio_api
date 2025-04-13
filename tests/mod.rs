@@ -1,0 +1,1 @@
+pub mod integration; // Declares the integration_tests directory as a module
