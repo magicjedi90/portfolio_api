@@ -31,4 +31,4 @@ use utoipa::OpenApi;
         description = "API for managing portfolio projects, skills, and job history"
     )
 )]
-pub struct ApiDoc; 
+pub struct ApiDoc;

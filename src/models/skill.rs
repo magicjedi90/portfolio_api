@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::db::proficiency_enum::Proficiency;
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 /// Represents a technology/tool used in projects

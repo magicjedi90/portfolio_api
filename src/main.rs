@@ -1,13 +1,12 @@
-use std::net::SocketAddr;
 use dotenv::dotenv;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use std::net::SocketAddr;
 use tokio::signal;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-
-mod handlers;
-mod db;
-mod models;
 mod api_docs;
+mod db;
+mod handlers;
+mod models;
 mod routes;
 
 #[tokio::main]
@@ -17,8 +16,10 @@ async fn main() {
 
     // Initialize logging
     tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| "portfolio_api=debug,tower_http=debug".into()))
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "portfolio_api=debug,tower_http=debug".into()),
+        )
         .with(tracing_subscriber::fmt::layer())
         .init();
 
@@ -45,7 +46,7 @@ async fn main() {
     tracing::info!("Swagger UI available at http://{}/swagger-ui", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-    
+
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await

@@ -14,5 +14,5 @@ pub enum Proficiency {
     /// Deep understanding and extensive experience with the technology
     Advanced,
     /// Mastery of the technology with ability to teach and innovate
-    Expert
+    Expert,
 }

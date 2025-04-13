@@ -1,12 +1,12 @@
-use axum::{Json, extract::State, http::StatusCode};
 use crate::db::jobs_db;
+use crate::models::job::Job;
 use axum::response::IntoResponse;
+use axum::{Json, extract::State, http::StatusCode};
 use sqlx::PgPool;
 use tracing::error;
-use crate::models::job::Job;
 
 /// Get all jobs
-/// 
+///
 /// Returns a list of all jobs in the portfolio
 #[utoipa::path(
     get,
@@ -28,7 +28,7 @@ pub async fn get_jobs(State(pool): State<PgPool>) -> impl IntoResponse {
 }
 
 /// Get a single job by ID
-/// 
+///
 /// Returns a single job if found, or 404 if not found
 #[utoipa::path(
     get,
@@ -55,4 +55,4 @@ pub async fn get_job_by_id(
             (StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch job").into_response()
         }
     }
-} 
+}

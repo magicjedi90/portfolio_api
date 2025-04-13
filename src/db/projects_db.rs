@@ -1,9 +1,9 @@
 use crate::models::project::Project;
-use sqlx::PgPool;
 use crate::models::skill::Skill;
-use sqlx::postgres::PgRow;
-use sqlx::Row;
 use serde_json::Value;
+use sqlx::PgPool;
+use sqlx::Row;
+use sqlx::postgres::PgRow;
 
 const PROJECT_SKILLS_QUERY: &str = r#"
     WITH project_skills AS (
@@ -40,7 +40,7 @@ const PROJECT_SKILLS_QUERY: &str = r#"
 fn map_row_to_project(row: PgRow) -> Project {
     let skills_json: Value = row.try_get("skills").unwrap_or(Value::Array(vec![]));
     let skills: Vec<Skill> = serde_json::from_value(skills_json).unwrap_or_default();
-        
+
     Project {
         id: row.try_get("id").unwrap_or_default(),
         name: row.try_get("name").unwrap_or_default(),
@@ -79,7 +79,10 @@ pub async fn fetch_projects(pool: &PgPool) -> Result<Vec<Project>, sqlx::Error> 
 /// # Returns
 ///
 /// * `Result<Option<Project>, sqlx::Error>` - The project if found, None if not found, or a database error
-pub async fn fetch_project_by_id(pool: &PgPool, project_id: i32) -> Result<Option<Project>, sqlx::Error> {
+pub async fn fetch_project_by_id(
+    pool: &PgPool,
+    project_id: i32,
+) -> Result<Option<Project>, sqlx::Error> {
     let row = sqlx::query(format!("{} WHERE p.id = $1", PROJECT_SKILLS_QUERY).as_str())
         .bind(project_id)
         .map(map_row_to_project)
@@ -99,12 +102,21 @@ pub async fn fetch_project_by_id(pool: &PgPool, project_id: i32) -> Result<Optio
 /// # Returns
 ///
 /// * `Result<Vec<Project>, sqlx::Error>` - A vector of projects if successful, or a database error
-pub async fn fetch_projects_by_job(pool: &PgPool, job_id: i32) -> Result<Vec<Project>, sqlx::Error> {
-    let rows = sqlx::query(format!("{} WHERE p.job_id = $1 ORDER BY p.id ASC", PROJECT_SKILLS_QUERY).as_str())
-        .bind(job_id)
-        .map(map_row_to_project)
-        .fetch_all(pool)
-        .await?;
+pub async fn fetch_projects_by_job(
+    pool: &PgPool,
+    job_id: i32,
+) -> Result<Vec<Project>, sqlx::Error> {
+    let rows = sqlx::query(
+        format!(
+            "{} WHERE p.job_id = $1 ORDER BY p.id ASC",
+            PROJECT_SKILLS_QUERY
+        )
+        .as_str(),
+    )
+    .bind(job_id)
+    .map(map_row_to_project)
+    .fetch_all(pool)
+    .await?;
 
     Ok(rows)
 }
@@ -119,7 +131,10 @@ pub async fn fetch_projects_by_job(pool: &PgPool, job_id: i32) -> Result<Vec<Pro
 /// # Returns
 ///
 /// * `Result<Vec<Project>, sqlx::Error>` - A vector of projects if successful, or a database error
-pub async fn fetch_projects_by_skill(pool: &PgPool, skill_id: i32) -> Result<Vec<Project>, sqlx::Error> {
+pub async fn fetch_projects_by_skill(
+    pool: &PgPool,
+    skill_id: i32,
+) -> Result<Vec<Project>, sqlx::Error> {
     let rows = sqlx::query(
         r#"
             WITH project_skills AS (
@@ -160,7 +175,9 @@ pub async fn fetch_projects_by_skill(pool: &PgPool, skill_id: i32) -> Result<Vec
                 WHERE ps2.project_id = p.id AND ps2.skill_id = $1
             )
             ORDER BY p.id ASC
-            "#.to_string().as_str()
+            "#
+        .to_string()
+        .as_str(),
     )
     .bind(skill_id)
     .map(map_row_to_project)

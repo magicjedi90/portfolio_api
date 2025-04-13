@@ -1,12 +1,12 @@
-use axum::{Json, extract::State, http::StatusCode};
 use crate::db::projects_db;
+use crate::models::project::Project;
 use axum::response::IntoResponse;
+use axum::{Json, extract::State, http::StatusCode};
 use sqlx::PgPool;
 use tracing::error;
-use crate::models::project::Project;
 
 /// Get all projects
-/// 
+///
 /// Returns a list of all projects in the portfolio
 #[utoipa::path(
     get,
@@ -22,13 +22,17 @@ pub async fn get_projects(State(pool): State<PgPool>) -> impl IntoResponse {
         Ok(projects) => (StatusCode::OK, Json(projects)).into_response(),
         Err(e) => {
             error!("Failed to get projects: {:?}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch projects").into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to fetch projects",
+            )
+                .into_response()
         }
     }
 }
 
 /// Get a single project by ID
-/// 
+///
 /// Returns a single project if found, or 404 if not found
 #[utoipa::path(
     get,
@@ -58,7 +62,7 @@ pub async fn get_project_by_id(
 }
 
 /// Get all projects for a specific job
-/// 
+///
 /// Returns a list of all projects associated with the specified job
 #[utoipa::path(
     get,
@@ -80,13 +84,17 @@ pub async fn get_projects_by_job(
         Ok(projects) => (StatusCode::OK, Json(projects)).into_response(),
         Err(e) => {
             error!("Failed to get projects for job {}: {:?}", job_id, e);
-            (StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch projects").into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to fetch projects",
+            )
+                .into_response()
         }
     }
 }
 
 /// Get all projects that use a specific skill
-/// 
+///
 /// Returns a list of all projects that use the specified skill
 #[utoipa::path(
     get,
@@ -108,7 +116,11 @@ pub async fn get_projects_by_skill(
         Ok(projects) => (StatusCode::OK, Json(projects)).into_response(),
         Err(e) => {
             error!("Failed to get projects for skill {}: {:?}", skill_id, e);
-            (StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch projects").into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to fetch projects",
+            )
+                .into_response()
         }
     }
 }
